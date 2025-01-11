@@ -7,18 +7,23 @@ sudo passwd root && su
 
 ## 2. 更新软件
 ```bash
-apt update && apt upgrade -y 
+sudo apt update -y && sudo apt upgrade -y 
 ```
 
 ## 3. 安装基础常用软件
+### 3.1 安装软件
 ```bash
-apt install -y vim git python3 pip build-essential curl wget net-tools iputils-ping
+sudo apt install -y vim git python3 pip build-essential curl wget net-tools iputils-ping libssl-dev
+```
+### 3.1 配置时区
+```bash
+sudo timedatectl set-timezone Asia/Shanghai
 ```
 
 ## 4. 配置ssh
 ### 4.1 安装openssh
 ```bash
-apt install -y openssh-server openssh-client
+sudo apt install -y openssh-server openssh-client
 ```
 ### 4.2 ssh配置文件修改
 ```bash
@@ -76,7 +81,7 @@ sudo systemctl restart smbd
 ## 6 安装zsh && oh-my-zsh
 ### 6.1 安装zsh
 ```bash
-apt install -y zsh
+sudo apt install -y zsh
 ```
 ### 6.2 下载并安装oh-my-zsh
 ```bash
@@ -170,7 +175,11 @@ ls -l ${HOME}/nfs/test_file
 sudo apt update
 sudo apt install tftpd-hpa
 ```
-### 8.2 配置tftp
+### 8.2 创建nfs目录
+```bash
+mkdir -p ${HOME}/tftp && chmod 777 ${HOME}/tftp
+```
+### 8.3 配置tftp
 打开配置文件
 ```
 sudo vim /etc/default/tftpd-hpa
@@ -179,7 +188,7 @@ sudo vim /etc/default/tftpd-hpa
 # /etc/default/tftpd-hpa
 
 TFTP_USERNAME="tftp"
-TFTP_DIRECTORY="/home/wanguo/99-tftp"
+TFTP_DIRECTORY="/home/wanguo/tftp"
 TFTP_ADDRESS=":69"
 TFTP_OPTIONS="--secure -l -c"
 ```
