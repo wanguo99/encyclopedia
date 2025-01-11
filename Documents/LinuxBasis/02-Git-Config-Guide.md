@@ -52,7 +52,12 @@ ssh -T git@github.com
 Hi isGuoHao! You've successfully authenticated, but GitHub does not provide shell access.
 ```
 
-
+## 3. git commit format
+```
+git commit . --amend -m "- Issues:
+- Date: `date "+%Y/%m/%d %H:%M:%S"`
+- Author: `whoami`"
+```
 
 
 

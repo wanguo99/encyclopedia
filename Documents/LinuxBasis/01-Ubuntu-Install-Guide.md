@@ -165,4 +165,27 @@ ls -l ${HOME}/nfs/test_file
 
 
 ## 8. 搭建tftp服务器
-待补充
+### 8.1 安装tftpd-hpa
+```
+sudo apt update
+sudo apt install tftpd-hpa
+```
+### 8.2 配置tftp
+打开配置文件
+```
+sudo vim /etc/default/tftpd-hpa
+```
+``` shell
+# /etc/default/tftpd-hpa
+
+TFTP_USERNAME="tftp"
+TFTP_DIRECTORY="/home/wanguo/99-tftp"
+TFTP_ADDRESS=":69"
+TFTP_OPTIONS="--secure -l -c"
+```
+### 8.3 重启TFTP服务以应用更改
+```
+sudo systemctl restart tftpd-hpa
+```
+
+
