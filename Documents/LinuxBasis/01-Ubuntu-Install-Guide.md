@@ -13,7 +13,7 @@ sudo apt update -y && sudo apt upgrade -y
 ## 3. 安装基础常用软件
 ### 3.1 安装软件
 ```bash
-sudo apt install -y vim git python3 pip build-essential curl wget net-tools iputils-ping libssl-dev
+sudo apt install -y vim git python3 pip build-essential curl wget net-tools iputils-ping libssl-dev libgnutls28-dev uuid-dev
 ```
 ### 3.1 配置时区
 ```bash
