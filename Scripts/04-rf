@@ -6,21 +6,6 @@ if [ "$#" -lt 1 ]; then
     exit 1
 fi
 
-# 列出所有待删除的文件和目录，格式化输出
-echo "The following files and directories will be deleted:"
-for TARGET in "$@"; do
-    echo "  - $TARGET"
-done
-echo  # 添加一个换行符
-
-# 确认删除操作，默认选择 yes
-read -p "Are you sure you want to delete all the listed files and directories? (y/n, default: y): " confirmation
-confirmation=${confirmation:-y}
-
-if [ "$confirmation" != "y" ]; then
-    echo "Operation cancelled."
-    exit 0
-fi
 
 # 遍历所有传入的文件和目录
 for TARGET in "$@"; do
@@ -35,9 +20,7 @@ for TARGET in "$@"; do
     rm -rf "$TARGET"
 
     # 检查删除操作是否成功
-    if [ $? -eq 0 ]; then
-        echo "$TARGET deleted successfully."
-    else
+    if [ $? -ne 0 ]; then
         echo "Error: Failed to delete $TARGET."
     fi
 done
