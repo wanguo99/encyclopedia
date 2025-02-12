@@ -14,7 +14,7 @@ sudo apt update -y && sudo apt upgrade -y
 ### 3.1 安装软件
 ```bash
 sudo apt install -y vim git python3 pip build-essential curl wget net-tools iputils-ping libssl-dev libgnutls28-dev uuid-dev
-sudo apt install -y libncurses-dev tree
+sudo apt install -y libncurses-dev tree unzip
 ```
 ### 3.1 配置时区
 ```bash
