@@ -44,6 +44,11 @@ RUN apt install -y --no-install-recommends \
     tftpd-hpa \
     && rm -rf /var/lib/apt/lists/*
 
+RUN apt update -y && apt upgrade -y
+RUN apt install -y file \
+    cpio \
+    rsync
+
 # 设置root密码并创建新用户wanguo，并设置密码
 RUN echo "root:root_password" | chpasswd && \
     useradd -m wanguo && echo "wanguo:p" | chpasswd
@@ -83,7 +88,7 @@ RUN mkdir -p $HOME/.oh-my-zsh/custom/themes/
 RUN cp ${HOME}/.oh-my-zsh/themes/xiong-chiamiov-plus.zsh-theme $HOME/.oh-my-zsh/custom/themes/
 
 # 使用sed命令在PROMPT=$'后边增加一个换行
-RUN sed -i 's/PROMPT=\$'/PROMPT=\$'\n/' $HOME/.oh-my-zsh/custom/themes/xiong-chiamiov-plus.zsh-theme
+# RUN sed -i 's/PROMPT=\$'/PROMPT=\$'\n/' $HOME/.oh-my-zsh/custom/themes/xiong-chiamiov-plus.zsh-theme
 
 # 配置zsh插件
 RUN sed -i 's/^plugins=(.*)/plugins=(git z sudo extract zsh-autosuggestions zsh-syntax-highlighting zsh-completions)/' ${HOME}/.zshrc
