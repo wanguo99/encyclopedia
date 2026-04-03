@@ -1,0 +1,64 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36">
+  <diagram name="第 1 页" id="bzh9JvbaFVGcznuo3Mn-">
+    <mxGraphModel dx="1114" dy="488" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="xD50xICuvoTj1gfVjg6n-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="服务器主板" vertex="1">
+          <mxGeometry height="200" width="140" x="100" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="xD50xICuvoTj1gfVjg6n-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="BMC" vertex="1">
+          <mxGeometry height="117" width="140" x="100" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="xD50xICuvoTj1gfVjg6n-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="AM625" vertex="1">
+          <mxGeometry height="120" width="120" x="360" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="xD50xICuvoTj1gfVjg6n-4" edge="1" parent="1" source="xD50xICuvoTj1gfVjg6n-2" style="shape=flexArrow;endArrow=classic;startArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="xD50xICuvoTj1gfVjg6n-3" value="Ethernet">
+          <mxGeometry height="100" relative="1" width="100" as="geometry">
+            <mxPoint x="300" y="360" as="sourcePoint" />
+            <mxPoint x="400" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="xD50xICuvoTj1gfVjg6n-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="卫星平台" vertex="1">
+          <mxGeometry height="320" width="140" x="600" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="xD50xICuvoTj1gfVjg6n-6" edge="1" parent="1" style="shape=flexArrow;endArrow=classic;startArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" value="can">
+          <mxGeometry height="100" relative="1" width="100" as="geometry">
+            <mxPoint x="480" y="300" as="sourcePoint" />
+            <mxPoint x="600" y="301" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="xD50xICuvoTj1gfVjg6n-7" parent="1" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;" value="电源滤波及开关" vertex="1">
+          <mxGeometry height="60" width="120" x="360" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="xD50xICuvoTj1gfVjg6n-8" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0.999;entryY=0.406;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryPerimeter=0;" value="54V">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="360" y="139.4" as="sourcePoint" />
+            <mxPoint x="239.86000000000013" y="140.60000000000005" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="xD50xICuvoTj1gfVjg6n-9" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0.999;entryY=0.406;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryPerimeter=0;" value="12V">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="600" y="110" as="sourcePoint" />
+            <mxPoint x="480" y="111" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="xD50xICuvoTj1gfVjg6n-11" parent="1" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0.6;dx=40;direction=north;notch=0;" value="pmBus" vertex="1">
+          <mxGeometry height="90" width="35" x="402.5" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="xD50xICuvoTj1gfVjg6n-12" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0.999;entryY=0.406;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryPerimeter=0;" value="12V">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="360" y="110" as="sourcePoint" />
+            <mxPoint x="240" y="111" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="xD50xICuvoTj1gfVjg6n-13" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0.999;entryY=0.406;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryPerimeter=0;" value="54V">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="600.1399999999999" y="140" as="sourcePoint" />
+            <mxPoint x="480" y="141.20000000000005" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
