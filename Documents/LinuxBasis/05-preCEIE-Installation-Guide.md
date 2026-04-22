@@ -11,7 +11,7 @@
 
 # 3. 创建一个spack环境，名字自己定 【以 test_env 为例】
 ```bash
-	spack spack env create test_env
+	spack env create test_env
 ```
 
 # 4. 启用 test_env 环境
