@@ -136,11 +136,11 @@ sudo apt install -y nfs-kernel-server
 ```
 ### 7.2 创建nfs目录
 ```bash
-mkdir -p ${HOME}/nfs && chmod 777 ${HOME}/nfs
+sudo mkdir -p /srv/nfs  # 与tftp同一级根目录
 ```
 ### 7.3 配置nfs目录
 ```bash
-sudo echo "${HOME}/nfs *(rw,sync,no_root_squash,no_subtree_check)" >> /etc/exports
+sudo echo "/srv/nfs *(rw,sync,no_root_squash,no_subtree_check)" >> /etc/exports
 ```
 ### 7.4 重启nfs服务
 ```bash
@@ -154,21 +154,20 @@ showmount -e
 挂载nfs目录并创建文件，若能挂载成功，且在nfs目录下看到测试文件生成，则说明功能正常
 ```bash
 # 创建临时目录并将其挂载到nfs目录
-mkdir ${HOME}/nfs_test && sudo mount -t nfs 127.0.0.1:${HOME}/nfs ${HOME}/nfs_test
+mkdir ${HOME}/nfs_test && sudo mount -t nfs 127.0.0.1:/srv/nfs ${HOME}/nfs_test
 ```
 ```bash
 # 在挂载目录内创建测试文件
 touch ${HOME}/nfs_test/test_file
 ```
 ```bash
+# 查看nfs目录下是否生成了测试文件
+ls -l /srv/nfs/test_file
+```
+```bash
 # 卸载nfs目录
 sudo umount ${HOME}/nfs_test
 ```
-```bash
-# 查看nfs目录下是否生成了测试文件
-ls -l ${HOME}/nfs/test_file
-```
-
 
 ## 8. 搭建tftp服务器
 ### 8.1 安装tftpd-hpa
@@ -176,11 +175,11 @@ ls -l ${HOME}/nfs/test_file
 sudo apt update -y
 sudo apt install -y tftpd-hpa
 ```
-### 8.2 创建nfs目录
+### 8.2 创建nfs目录【可选】
 ```bash
 mkdir -p ${HOME}/tftp && chmod 777 ${HOME}/tftp
 ```
-### 8.3 配置tftp
+### 8.3 配置tftp【可选】
 打开配置文件
 ```
 sudo vim /etc/default/tftpd-hpa
@@ -197,5 +196,3 @@ TFTP_OPTIONS="--secure -l -c"
 ```
 sudo systemctl restart tftpd-hpa
 ```
-
-
