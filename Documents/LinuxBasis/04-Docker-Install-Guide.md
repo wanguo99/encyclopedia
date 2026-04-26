@@ -9,11 +9,11 @@ curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
 ### 1.2 方法2: 命令行安装
 #### 1.2.1 更新源，并安装必要依赖
 ```bash
-apt update -y && apt upgrade -y
+sudo apt update -y && sudo apt upgrade -y
 ```
 
 ```bash
-apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
 ```
 #### 1.2.2 导入源仓库的 GPG key
 ```bash
@@ -21,14 +21,14 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 ```
 #### 1.2.3 添加 Docker APT 软件源
 ```bash
-add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 ```
 #### 1.2.4 安装 Docker 最新版本
 ```bash
-apt update -y && apt upgrade -y
+sudo apt update -y && sudo apt upgrade -y
 ```
 ```bash
-apt install docker-ce docker-ce-cli containerd.io
+sudo apt install docker-ce docker-ce-cli containerd.io
 ```
 #### 1.2.5 输入命令验证是否安装成功
 查看是否显示Docker版本号。
