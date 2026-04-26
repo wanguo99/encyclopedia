@@ -44,21 +44,6 @@ sudo apt-mark hold docker-ce
 ```bash
 sudo usermod -aG docker ${USER}
 ```
-#### 1.2.8 卸载 Docker
-卸载前，先停止并删除容器、镜像，卷和网络。
-```bash
-sudo docker container stop $(sudo docker container ls -aq)
-```
-```bash
-sudo docker system prune -a --volumes
-```
-#### 1.2.9 删除软件、配置和软件包
-```bash
-sudo apt purge docker-ce
-```
-```bash
-sudo apt autoremove
-```
 
 ## 2. 基于ubuntu:22.04创建容器
 ### 2.1 修改镜像源，并拉取镜像
@@ -136,4 +121,21 @@ docker save -o <保存的镜像文件名.tar> <镜像名称>
 ### 从文件中加载镜像
 ```bash
 docker load -i <保存的镜像文件名.tar>
+```
+
+
+### 3.1 卸载 Docker
+卸载前，先停止并删除容器、镜像，卷和网络。
+```bash
+sudo docker container stop $(sudo docker container ls -aq)
+```
+```bash
+sudo docker system prune -a --volumes
+```
+### 3.2 删除软件、配置和软件包
+```bash
+sudo apt purge docker-ce
+```
+```bash
+sudo apt autoremove
 ```
