@@ -47,10 +47,10 @@ sudo usermod -aG docker ${USER}
 #### 1.2.8 卸载 Docker
 卸载前，先停止并删除容器、镜像，卷和网络。
 ```bash
-docker container stop $(docker container ls -aq)
+sudo docker container stop $(sudo docker container ls -aq)
 ```
 ```bash
-docker system prune -a --volumes
+sudo docker system prune -a --volumes
 ```
 #### 1.2.9 删除软件、配置和软件包
 ```bash
