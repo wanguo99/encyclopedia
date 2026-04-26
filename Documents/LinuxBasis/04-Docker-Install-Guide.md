@@ -47,6 +47,12 @@ sudo usermod -aG docker ${USER}
 
 ## 2. 基于ubuntu:22.04创建容器
 ### 2.1 修改镜像源，并拉取镜像
+
+#### 2.1.0 获取加速器地址：
+访问 阿里云容器镜像服务控制台。
+登录后，点击左侧导航栏的 镜像工具 -> 镜像加速器。
+复制你专属的加速器地址（格式通常为 https://xxxx.mirror.aliyuncs.com）。
+
 #### 2.1.1 修改镜像源
 ```bash
 sudo vim /etc/docker/daemon.json
