@@ -132,7 +132,7 @@ alias greph='find . -iname "*.h" | xargs grep -rn --color=auto '
 ## 7. 搭建nfs服务器
 ### 7.1 安装nfs-server
 ```bash
-sudo apt install nfs-kernel-server
+sudo apt install -y nfs-kernel-server
 ```
 ### 7.2 创建nfs目录
 ```bash
@@ -173,8 +173,8 @@ ls -l ${HOME}/nfs/test_file
 ## 8. 搭建tftp服务器
 ### 8.1 安装tftpd-hpa
 ```
-sudo apt update
-sudo apt install tftpd-hpa
+sudo apt update -y
+sudo apt install -y tftpd-hpa
 ```
 ### 8.2 创建nfs目录
 ```bash
