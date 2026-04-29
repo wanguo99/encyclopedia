@@ -107,7 +107,7 @@ vim ~/.zshrc
 ```
 #### 6.4.1 修改主题
 ```bash
-ZSH_THEME="jonathan"
+ZSH_THEME="xiong-chiamiov-plus"
 ```
 #### 6.4.2 开启插件
 ```bash
