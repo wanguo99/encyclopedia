@@ -2,7 +2,7 @@
 
 ## 1. 安装docker
 ### 1.1 方法1: 脚本自动安装
-如果遇到卡死的情况，可以直接打开链接 https://get.docker.com ，将其中的内容复制，并保存到脚本docekr_install.sh，然后执行命令 bash docker_install.sh --mirror Aliyun 等待安装完成即可
+如果遇到卡死的情况，可以直接打开链接 https://get.docker.com ，将其中的内容复制，并保存到脚本docker_install.sh，然后执行命令 bash docker_install.sh --mirror Aliyun 等待安装完成即可
 ```bash
 curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
 ```
@@ -124,7 +124,7 @@ sudo docker commit docker-ubuntu ${IMAGE_NAME}:{IMAGE_TAG}
 ```bash
 sudo docker save -o <保存的镜像文件名.tar> <镜像名称>
 ```
-### 从文件中加载镜像
+### 2.11 从文件中加载镜像
 ```bash
 sudo docker load -i <保存的镜像文件名.tar>
 ```

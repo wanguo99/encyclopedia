@@ -1,3 +1,4 @@
+# 05-preCICE-Installation-Guide
 
 # 1. 下载spack仓库
 ```bash
@@ -19,7 +20,7 @@
 	spack env activate test_env
 ```
 
-# 5. 安装prepice
+# 5. 安装precice
 ## 5.1 安装编译工具链
 ```bash
 sudo apt install -y build-essential gfortran pkg-config
@@ -56,17 +57,17 @@ spack compiler find
 	make -j $(nproc)
 ```
 
-# 8. 加载 precice
+# 9. 加载 precice
 ```bash
 	spack load precice
 ```
 
-# 9. 验证ccx_preCICE是否可用
+# 10. 验证ccx_preCICE是否可用
 ```bash
 	~/calculix-adapter-master/bin/ccx_preCICE -v
 ```
 
-# 10. 下载 tutorials
+# 11. 下载 tutorials
 ```bash
 	git clone https://github.com/precice/tutorials.git
 ```

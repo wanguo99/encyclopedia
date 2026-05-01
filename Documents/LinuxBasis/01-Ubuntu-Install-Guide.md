@@ -16,7 +16,7 @@ sudo apt update -y && sudo apt upgrade -y
 sudo apt install -y vim git python3 pip build-essential curl wget net-tools iputils-ping libssl-dev libgnutls28-dev uuid-dev
 sudo apt install -y libncurses-dev tree unzip rsync
 ```
-### 3.1 配置时区
+### 3.2 配置时区
 ```bash
 sudo timedatectl set-timezone Asia/Shanghai
 ```
@@ -175,7 +175,7 @@ sudo umount ${HOME}/nfs_test
 sudo apt update -y
 sudo apt install -y tftpd-hpa
 ```
-### 8.2 创建nfs目录【可选】
+### 8.2 创建tftp目录
 ```bash
 mkdir -p ${HOME}/tftp && chmod 777 ${HOME}/tftp
 ```
@@ -192,7 +192,7 @@ TFTP_DIRECTORY="/home/wanguo/tftp"
 TFTP_ADDRESS=":69"
 TFTP_OPTIONS="--secure -l -c"
 ```
-### 8.3 重启TFTP服务以应用更改
+### 8.4 重启TFTP服务以应用更改
 ```
 sudo systemctl restart tftpd-hpa
 ```
