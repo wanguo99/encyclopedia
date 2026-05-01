@@ -83,21 +83,21 @@ spack compiler find
 ```bash
 	# 【必须】 重新开一个窗口，重新加载spack环境：
 	source ~/spack/share/spack/setup-env.sh
-	spack env activate test
+	spack env activate test_env
 	spack load precice
 	
 	# 运行 solid-calculix
-	cd solid-calculix/run.sh && ./run.sh
+	cd solid-calculix && ./run.sh
 ```
 	
 # 13. 运行fluid-openfoam 里边的 run.sh
 ```bash
 	# 【必须】 重新开一个窗口，重新加载spack环境：
 	source ~/spack/share/spack/setup-env.sh
-	spack env activate test
+	spack env activate test_env
 	spack load precice
 	
 	# 运行 fluid-openfoam
-	cd fluid-openfoam/run.sh && ./run.sh
+	cd fluid-openfoam && ./run.sh
 ```
 
