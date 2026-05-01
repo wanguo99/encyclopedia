@@ -46,7 +46,7 @@ ${HOME}/riscv_oslab/qemu/qemu-master/configure --target-list=riscv64-softmmu,ris
 ```
 #### 2.3.3 编译安装qemu
 ```bash
-make -j ${nproc} && sudo make install
+make -j $(nproc) && sudo make install
 ```
 #### 2.3.4 查看qemu版本
 ```bash

@@ -1,11 +1,96 @@
-" 设置缩进的宽度为4个空格
-set shiftwidth=4
+" ================================================================================
+" Vim C语言开发环境配置
+" 适用于Linux内核及通用C/C++开发
+" ================================================================================
+"
+" 【主要功能】
+" 1. Linux内核编码规范（Tab缩进8字符，80列限制）
+" 2. 代码导航（cscope + ctags）
+" 3. 函数列表侧边栏（Tagbar）
+" 4. 目录树浏览（NERDTree）
+" 5. 自动索引更新（保存文件后自动更新）
+" 6. 代码高亮增强（尾部空格、超长行）
+"
+" ================================================================================
+" 【快捷键说明】
+" ================================================================================
+"
+" ┌─────────────────────────────────────────────────────────────────────────┐
+" │ 界面布局控制（Leader键 = \）                                             │
+" └─────────────────────────────────────────────────────────────────────────┘
+"   \f          - 切换函数列表（Tagbar，左侧）
+"   \d          - 切换目录树（NERDTree，右侧）
+"   \a          - 同时打开函数列表和目录树
+"   \n          - 切换行号显示
+"   \m          - 切换鼠标模式（启用/禁用）
+"
+" ┌─────────────────────────────────────────────────────────────────────────┐
+" │ 代码导航（Cscope）                                                       │
+" └─────────────────────────────────────────────────────────────────────────┘
+"   Ctrl+\ g    - 查找函数/变量的定义（goto definition）
+"   Ctrl+\ c    - 查找调用此函数的位置（find callers）
+"   Ctrl+\ s    - 查找C符号（find symbol）
+"   Ctrl+\ t    - 查找文本字符串（find text）
+"   Ctrl+\ f    - 查找文件（find file）
+"   Ctrl+\ i    - 查找包含此文件的文件（find includes）
+"   Ctrl+\ d    - 查找此函数调用的函数（find called functions）
+"   Ctrl+\ e    - 查找egrep模式（find egrep pattern）
+"
+" ┌─────────────────────────────────────────────────────────────────────────┐
+" │ 索引管理                                                                 │
+" └─────────────────────────────────────────────────────────────────────────┘
+"   \u          - 手动更新cscope和ctags索引
+"   自动更新    - 保存C/C++文件2秒后自动更新索引
+"   索引位置    - ~/.vim/cscope_db/（按项目路径分类存储）
+"
+" ┌─────────────────────────────────────────────────────────────────────────┐
+" │ 标准Vim操作                                                              │
+" └─────────────────────────────────────────────────────────────────────────┘
+"   Ctrl+]      - 跳转到标签定义（ctags）
+"   Ctrl+t      - 返回上一个位置
+"   Ctrl+o      - 跳转到上一个光标位置
+"   Ctrl+i      - 跳转到下一个光标位置
+"
+" ================================================================================
+" 【自动化功能】
+" ================================================================================
+"   • 打开C/C++文件时自动加载项目索引
+"   • 保存C/C++文件2秒后自动更新索引（后台执行，不阻塞编辑）
+"   • 自动查找项目根目录（.git、Makefile、Kconfig）
+"   • 记住上次编辑位置，重新打开文件时自动跳转
+"   • 高亮显示尾部空格（红色背景）
+"   • 高亮显示超过80列的字符（深红色背景）
+"
+" ================================================================================
+" 【依赖工具】
+" ================================================================================
+"   必需：cscope, ctags
+"   插件：Tagbar (~/.vim/pack/plugins/start/tagbar/)
+"         NERDTree (~/.vim/pack/plugins/start/nerdtree/)
+"
+" ================================================================================
 
-" 设置制表符的宽度为4个空格
-set tabstop=4
+" ============ 基础设置 ============
+" 显示行号
+set number
 
-" 用空格代替制表符
-set expandtab
+" 显示当前行列号
+set ruler
+
+" 高亮当前行
+set cursorline
+
+" 显示命令
+set showcmd
+
+" 默认使用鼠标
+set mouse=a
+
+" 语法高亮
+syntax on
+
+" 文件类型检测
+filetype plugin indent on
 
 " 启用智能缩进
 set smartindent
@@ -16,16 +101,13 @@ set autoindent
 " 使光标移到下一行时保留当前行的缩进
 set smarttab
 
-" 显示行号
-set number
-
-" 默认使用鼠标
-set mouse=a
-
+" ============ 搜索设置 ============
 " 搜索时自动跳转到匹配处
 set incsearch
+
 " 搜索时高亮显示匹配字符
 set hlsearch
+
 " 忽略大小写
 set ignorecase
 set smartcase
@@ -33,68 +115,260 @@ set smartcase
 " 高亮显示匹配括号
 set showmatch
 
+" ============ C/C++ Coding Style ============
+" 使用4个空格缩进
+function! StandardCodingStyle()
+    set tabstop=4           " Tab显示为4个字符
+    set shiftwidth=4        " 缩进宽度4
+    set softtabstop=4       " 按Tab键插入4个字符
+    set expandtab           " 将Tab转换为空格
+    set textwidth=80        " 80列限制
+    set colorcolumn=81      " 81列处显示竖线
+    highlight ColorColumn ctermbg=darkgray guibg=darkgray
+endfunction
 
-" 自动补全小括号 ()
-"inoremap ( ()<Left>
+augroup c_coding_style
+    autocmd!
+    autocmd FileType c,cpp call StandardCodingStyle()
+augroup END
 
-" 自动补全大括号 {}
-" inoremap { {}<Left>
+" ============ C语言增强 ============
+" 高亮尾部空格
+highlight ExtraWhitespace ctermbg=red guibg=red
+match ExtraWhitespace /\s\+$/
+autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
+autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
+autocmd InsertLeave * match ExtraWhitespace /\s\+$/
 
-" 自动补全中括号 []
-"inoremap [ []<Left>
+" 高亮超过80列的字符
+highlight OverLength ctermbg=darkred ctermfg=white guibg=#592929
+autocmd FileType c,cpp match OverLength /\%81v.\+/
 
-" 自动补全单引号 ''
-" inoremap ' ''<Left>
+" ============ Cscope/Ctags 配置 ============
+" 索引文件保存目录
+let g:cscope_db_dir = expand('~/.vim/cscope_db')
 
-" 自动补全双引号 ""
-" inoremap " ""<Left>
+" 设置tags文件搜索路径（向上递归查找）
+set tags=./tags,tags;$HOME
 
-" 大括号中加入自动换行和缩进
-" inoremap {<CR> {<CR>}<Esc>O
+" Cscope设置
+if has("cscope")
+    set csprg=/usr/bin/cscope
+    set csto=0              " 先搜索cscope数据库，再搜索tags
+    set cst                 " 同时搜索cscope数据库和tags文件
+    set nocsverb            " 不显示添加数据库的消息
+    set csverb
+endif
 
+" --------------- 函数定义 ---------------
+" 查找项目根目录（包含.git或Makefile的目录）
+function! FindProjectRoot()
+    let l:current_dir = expand('%:p:h')
+    let l:root_markers = ['.git', 'Makefile', 'Kconfig']
 
+    " 向上查找项目根目录
+    while l:current_dir != '/' && l:current_dir != $HOME
+        for marker in l:root_markers
+            if isdirectory(l:current_dir . '/' . marker) || filereadable(l:current_dir . '/' . marker)
+                return l:current_dir
+            endif
+        endfor
+        let l:current_dir = fnamemodify(l:current_dir, ':h')
+    endwhile
 
-" 将 F2 键绑定到切换鼠标模式函数
-nnoremap <F2> :call ToggleMouseMode()<CR>
-inoremap <F2> <C-O>:call ToggleMouseMode()<CR>
-vnoremap <F2> :<C-U>call ToggleMouseMode()<CR>
+    " 如果没找到，返回当前文件所在目录
+    return expand('%:p:h')
+endfunction
 
-" 将 F3 键绑定到切换行号显示函数
-nnoremap <F3> :call ToggleLineNumber()<CR>
-inoremap <F3> <C-O>:call ToggleLineNumber()<CR>
-vnoremap <F3> :<C-U>call ToggleLineNumber()<CR>
+" 根据项目路径生成数据库存储路径
+function! GetCscopeDbPath(project_root)
+    " 将项目路径转换为安全的目录名（替换/为_）
+    let l:safe_name = substitute(a:project_root, '/', '_', 'g')
+    let l:db_dir = g:cscope_db_dir . l:safe_name
 
+    " 确保目录存在
+    if !isdirectory(l:db_dir)
+        call mkdir(l:db_dir, 'p')
+    endif
 
-" Save the last position for each file and jump to it on opening
-if has("autocmd")
-  " When editing a file, place the cursor at the last known position.
-  autocmd BufReadPost *
+    return l:db_dir
+endfunction
+
+" 加载项目的cscope数据库
+function! LoadCscopeDb()
+    let l:project_root = FindProjectRoot()
+
+    if l:project_root == ''
+        return
+    endif
+
+    let l:db_path = GetCscopeDbPath(l:project_root)
+    let l:cscope_out = l:db_path . '/cscope.out'
+    let l:tags_file = l:db_path . '/tags'
+
+    " 加载cscope数据库
+    if filereadable(l:cscope_out)
+        silent! cs kill -1
+        execute 'cs add ' . l:cscope_out . ' ' . l:project_root
+    endif
+
+    " 设置tags路径
+    if filereadable(l:tags_file)
+        execute 'set tags=' . l:tags_file . ',./tags,tags;$HOME'
+    endif
+endfunction
+
+" 后台更新cscope和ctags索引
+function! UpdateCscopeAndCtags()
+    let l:project_root = FindProjectRoot()
+
+    if l:project_root == ''
+        echo "Cannot find project root"
+        return
+    endif
+
+    let l:db_path = GetCscopeDbPath(l:project_root)
+
+    " 后台异步更新（不阻塞编辑）
+    let l:cmd = 'cd ' . shellescape(l:project_root) . ' && '
+    let l:cmd .= '(find . -name "*.c" -o -name "*.h" -o -name "*.cpp" -o -name "*.cc" > ' . shellescape(l:db_path . '/cscope.files') . ' && '
+    let l:cmd .= 'cscope -bkq -i ' . shellescape(l:db_path . '/cscope.files') . ' -f ' . shellescape(l:db_path . '/cscope.out') . ' && '
+    let l:cmd .= 'ctags -R --c-kinds=+p --fields=+iaS --extra=+q -f ' . shellescape(l:db_path . '/tags') . ') &'
+
+    call system(l:cmd)
+
+    " 重新加载cscope数据库
+    call LoadCscopeDb()
+
+    echo "Updating cscope and ctags in background... (saved to " . l:db_path . ")"
+endfunction
+
+" 切换鼠标模式
+function! ToggleMouseMode()
+    if &mouse == 'a'
+        set mouse=
+        echo "Mouse mode disabled"
+    else
+        set mouse=a
+        echo "Mouse mode enabled"
+    endif
+endfunction
+
+" 切换行号显示
+function! ToggleLineNumber()
+    if &number
+        set nonumber
+        echo "Line numbers disabled"
+    else
+        set number
+        echo "Line numbers enabled"
+    endif
+endfunction
+
+" --------------- 自动命令 ---------------
+augroup cscope_auto
+    autocmd!
+    " 打开C/C++文件时自动加载索引
+    autocmd BufReadPost *.c,*.h,*.cpp,*.cc call LoadCscopeDb()
+    " 保存文件2秒后自动更新索引
+    autocmd BufWritePost *.c,*.h,*.cpp,*.cc call timer_start(2000, {-> UpdateCscopeAndCtags()})
+augroup END
+
+" 记住上次编辑位置
+augroup remember_position
+    autocmd!
+    autocmd BufReadPost *
         \ if line("'\"") > 1 && line("'\"") <= line("$") |
         \   exe "normal! g'\"" |
         \ endif
-endif
+augroup END
 
-" --------------- functions define ---------------
-" 定义一个函数来切换鼠标模式
-function! ToggleMouseMode()
-  if &mouse == 'a'
-    set mouse=
-    echo "Mouse mode disabled"
-  else
-    set mouse=a
-    echo "Mouse mode enabled"
-  endif
-endfunction
+" ============ 快捷键映射 ============
+" \u: 手动更新索引
+nnoremap <Leader>u :call UpdateCscopeAndCtags()<CR>
 
-" 定义一个函数来切换行号显示
-function! ToggleLineNumber()
-  if &number
-    set nonumber
-    echo "Line numbers disabled"
-  else
-    set number
-    echo "Line numbers enabled"
-  endif
-endfunction
-" --------------- functions end ------------------
+" \m: 切换鼠标模式
+nnoremap <Leader>m :call ToggleMouseMode()<CR>
+inoremap <Leader>m <C-O>:call ToggleMouseMode()<CR>
+vnoremap <Leader>m :<C-U>call ToggleMouseMode()<CR>
 
+" \n: 切换行号显示
+nnoremap <Leader>n :call ToggleLineNumber()<CR>
+inoremap <Leader>n <C-O>:call ToggleLineNumber()<CR>
+vnoremap <Leader>n :<C-U>call ToggleLineNumber()<CR>
+
+" Cscope快捷键映射
+" Ctrl+\ s: 查找C符号
+nmap <C-\>s :cs find s <C-R>=expand("<cword>")<CR><CR>
+" Ctrl+\ g: 查找定义
+nmap <C-\>g :cs find g <C-R>=expand("<cword>")<CR><CR>
+" Ctrl+\ c: 查找调用
+nmap <C-\>c :cs find c <C-R>=expand("<cword>")<CR><CR>
+" Ctrl+\ t: 查找文本
+nmap <C-\>t :cs find t <C-R>=expand("<cword>")<CR><CR>
+" Ctrl+\ e: 查找egrep模式
+nmap <C-\>e :cs find e <C-R>=expand("<cword>")<CR><CR>
+" Ctrl+\ f: 查找文件
+nmap <C-\>f :cs find f <C-R>=expand("<cfile>")<CR><CR>
+" Ctrl+\ i: 查找包含此文件的文件
+nmap <C-\>i :cs find i ^<C-R>=expand("<cfile>")<CR>$<CR>
+" Ctrl+\ d: 查找此函数调用的函数
+nmap <C-\>d :cs find d <C-R>=expand("<cword>")<CR><CR>
+
+" ============ Tagbar 函数列表（左侧） ============
+" \f: 打开/关闭函数列表
+nmap <Leader>f :TagbarToggle<CR>
+
+" Tagbar配置
+let g:tagbar_left = 1                " 显示在左侧
+let g:tagbar_width = 35              " 侧边栏宽度
+let g:tagbar_autofocus = 1           " 打开时自动聚焦
+let g:tagbar_sort = 0                " 按文件中的顺序排序，不按字母排序
+let g:tagbar_compact = 1             " 紧凑模式，不显示帮助信息
+let g:tagbar_indent = 1              " 缩进级别
+let g:tagbar_show_linenumbers = 1    " 显示绝对行号
+let g:tagbar_autoshowtag = 1         " 自动展开当前tag
+let g:tagbar_autoclose = 0           " 跳转后不自动关闭
+
+" C语言显示的tag类型
+let g:tagbar_type_c = {
+    \ 'kinds' : [
+        \ 'd:macros:1:0',
+        \ 'p:prototypes:1:0',
+        \ 'g:enums',
+        \ 'e:enumerators:0:0',
+        \ 't:typedefs:0:0',
+        \ 's:structs',
+        \ 'u:unions',
+        \ 'm:members:0:0',
+        \ 'v:variables:0:0',
+        \ 'f:functions'
+    \ ],
+    \ 'sro' : '::',
+    \ 'kind2scope' : {
+        \ 'g' : 'enum',
+        \ 's' : 'struct',
+        \ 'u' : 'union'
+    \ },
+    \ 'scope2kind' : {
+        \ 'enum'   : 'g',
+        \ 'struct' : 's',
+        \ 'union'  : 'u'
+    \ }
+\ }
+
+" ============ NERDTree 目录树（右侧） ============
+" \d: 打开/关闭目录树
+nmap <Leader>d :NERDTreeToggle<CR>
+
+" NERDTree配置
+let g:NERDTreeWinPos = "right"       " 显示在右侧
+let g:NERDTreeWinSize = 35           " 窗口宽度
+let g:NERDTreeShowHidden = 1         " 显示隐藏文件
+let g:NERDTreeMinimalUI = 1          " 简洁界面
+let g:NERDTreeDirArrows = 1          " 使用箭头显示目录
+let g:NERDTreeAutoDeleteBuffer = 1   " 删除文件时自动删除buffer
+let g:NERDTreeIgnore = ['\.o$', '\.ko$', '\.mod\.c$', '\.symvers$', '\.order$', '^\.git$']
+
+" \a: 同时打开Tagbar和NERDTree
+nmap <Leader>a :TagbarToggle<CR>:NERDTreeToggle<CR>

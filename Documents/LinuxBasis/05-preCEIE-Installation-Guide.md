@@ -70,16 +70,17 @@ spack compiler find
 # 11. 下载 tutorials
 ```bash
 	git clone https://github.com/precice/tutorials.git
+	cd tutorials/flow-over-heated-plate
 ```
 
-# 11. 修改solid-calculix/run.sh
+# 13. 修改solid-calculix/run.sh
 ```bash
 	# 把原来的注释掉，改成第二行这个
 	# ccx_preCICE -i tube -precice-participant Solid
 	~/calculix-adapter-master/bin/ccx_preCICE -i tube -precice-participant Solid
 ```
 
-# 12. 运行 solid-calculix 里边的 run.sh
+# 14. 运行 solid-calculix 里边的 run.sh
 ```bash
 	# 【必须】 重新开一个窗口，重新加载spack环境：
 	source ~/spack/share/spack/setup-env.sh
@@ -90,7 +91,7 @@ spack compiler find
 	cd solid-calculix && ./run.sh
 ```
 	
-# 13. 运行fluid-openfoam 里边的 run.sh
+# 15. 运行fluid-openfoam 里边的 run.sh
 ```bash
 	# 【必须】 重新开一个窗口，重新加载spack环境：
 	source ~/spack/share/spack/setup-env.sh

@@ -79,7 +79,7 @@ sudo smbpasswd -a wanguo
 sudo systemctl restart smbd
 ```
 
-## 6 安装zsh && oh-my-zsh
+## 6. 安装zsh && oh-my-zsh
 ### 6.1 安装zsh
 ```bash
 sudo apt install -y zsh
@@ -140,7 +140,7 @@ sudo mkdir -p /srv/nfs  # 与tftp同一级根目录
 ```
 ### 7.3 配置nfs目录
 ```bash
-sudo echo "/srv/nfs *(rw,sync,no_root_squash,no_subtree_check)" >> /etc/exports
+echo "${HOME}/nfs *(rw,sync,no_root_squash,no_subtree_check)" | sudo tee -a /etc/exports
 ```
 ### 7.4 重启nfs服务
 ```bash
@@ -171,7 +171,7 @@ sudo umount ${HOME}/nfs_test
 
 ## 8. 搭建tftp服务器
 ### 8.1 安装tftpd-hpa
-```
+```bash
 sudo apt update -y
 sudo apt install -y tftpd-hpa
 ```
@@ -181,10 +181,10 @@ mkdir -p ${HOME}/tftp && chmod 777 ${HOME}/tftp
 ```
 ### 8.3 配置tftp【可选】
 打开配置文件
-```
+```bash
 sudo vim /etc/default/tftpd-hpa
 ```
-``` shell
+```bash
 # /etc/default/tftpd-hpa
 
 TFTP_USERNAME="tftp"
@@ -193,6 +193,6 @@ TFTP_ADDRESS=":69"
 TFTP_OPTIONS="--secure -l -c"
 ```
 ### 8.4 重启TFTP服务以应用更改
-```
+```bash
 sudo systemctl restart tftpd-hpa
 ```

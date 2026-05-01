@@ -25,6 +25,7 @@ git使用SSH配置， 初始需要以下三个步骤
 2. 将rsa公钥添加到代码托管平台
 3. 将rsa秘钥添加到ssh-agent中，为ssh client指定使用的秘钥文件
 
+### 2.2 生成和配置SSH key
 #### 2.2.1 检查本地主机是否已经存在 ssh key
 看是否存在 id_rsa 和 id_rsa.pub文件，如果存在，说明已经有SSH Key，如果存在，直接跳到第三步
 ```bash
@@ -53,10 +54,10 @@ Hi isGuoHao! You've successfully authenticated, but GitHub does not provide shel
 ```
 
 ## 3. git commit format
-```
-git commit . -m "- Issues:
-- Date: `date "+%Y/%m/%d %H:%M:%S"`
-- Author: `whoami`"
+```bash
+git commit -m "- Issues: 
+- Date: $(date '+%Y/%m/%d %H:%M:%S')
+- Author: $(whoami)"
 ```
 
 ## 4. 配置 git 代理

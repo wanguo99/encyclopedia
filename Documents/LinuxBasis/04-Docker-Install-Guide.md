@@ -44,6 +44,22 @@ sudo apt-mark hold docker-ce
 ```bash
 sudo usermod -aG docker ${USER}
 ```
+**注意**：执行后需要重新登录或执行 `newgrp docker` 使组权限生效
+#### 1.2.8 卸载 Docker
+卸载前，先停止并删除容器、镜像，卷和网络。
+```bash
+docker container stop $(docker container ls -aq)
+```
+```bash
+docker system prune -a --volumes
+```
+#### 1.2.9 删除软件、配置和软件包
+```bash
+sudo apt purge docker-ce
+```
+```bash
+sudo apt autoremove
+```
 
 ## 2. 基于ubuntu:22.04创建容器
 ### 2.1 修改镜像源，并拉取镜像
@@ -118,7 +134,7 @@ sudo docker rm docker-ubuntu
 ```
 ### 2.9 将容器保存为镜像
 ```bash
-sudo docker commit docker-ubuntu ${IMAGE_NAME}:{IMAGE_TAG}
+docker commit docker-ubuntu ${IMAGE_NAME}:${IMAGE_TAG}
 ```
 ### 2.10 将镜像保存至文件
 ```bash
