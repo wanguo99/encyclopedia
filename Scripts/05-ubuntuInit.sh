@@ -56,7 +56,81 @@ log_info "实际用户: $REAL_USER"
 log_info "用户主目录: $REAL_HOME"
 
 #############################################
-# 1. 更新系统软件包
+# 1. 配置APT镜像源
+#############################################
+configure_apt_source() {
+    log_info "配置APT镜像源..."
+
+    read -p "是否自动选择最快的APT镜像源？(y/n): " change_source
+    if [ "$change_source" != "y" ]; then
+        log_info "跳过APT镜像源配置"
+        return 0
+    fi
+
+    # 获取Ubuntu版本
+    local ubuntu_version=$(lsb_release -rs)
+    local ubuntu_codename=$(lsb_release -cs)
+
+    log_info "检测到Ubuntu版本: ${ubuntu_version} (${ubuntu_codename})"
+
+    # 备份原sources.list
+    local sources_file="/etc/apt/sources.list"
+    if [ ! -f "${sources_file}.bak" ]; then
+        cp "$sources_file" "${sources_file}.bak"
+        log_info "已备份原APT源配置: ${sources_file}.bak"
+    fi
+
+    # 检查是否安装了python3和pip
+    if ! command -v pip3 &> /dev/null; then
+        log_info "安装 python3-pip..."
+        apt update -y
+        apt install -y python3-pip
+    fi
+
+    # 安装apt-select
+    if ! command -v apt-select &> /dev/null; then
+        log_info "安装 apt-select..."
+        pip3 install apt-select
+    else
+        log_info "apt-select 已安装"
+    fi
+
+    # 使用apt-select自动选择最快的镜像源
+    log_info "正在测试并选择最快的镜像源（这可能需要几分钟）..."
+
+    # apt-select会自动测试所有可用镜像源并选择最快的
+    # -C 指定国家（CN=中国）
+    # -t 指定测试的镜像源数量
+    if apt-select -C CN -t 5 -m one-week-behind; then
+        log_success "镜像源测试完成"
+
+        # apt-select会生成sources.list文件
+        if [ -f "sources.list" ]; then
+            mv sources.list "$sources_file"
+            log_success "APT源配置完成"
+        else
+            log_error "apt-select未生成配置文件"
+            return 1
+        fi
+    else
+        log_error "apt-select执行失败，保持原配置"
+        return 1
+    fi
+
+    # 更新软件包列表
+    log_info "更新软件包列表..."
+    if apt update -y; then
+        log_success "软件包列表更新成功"
+    else
+        log_error "软件包列表更新失败，恢复原配置..."
+        cp "${sources_file}.bak" "$sources_file"
+        apt update -y
+        return 1
+    fi
+}
+
+#############################################
+# 2. 更新系统软件包
 #############################################
 update_system() {
     log_info "开始更新系统软件包..."
@@ -71,7 +145,7 @@ update_system() {
 }
 
 #############################################
-# 2. 安装基础软件
+# 3. 安装基础软件
 #############################################
 install_basic_packages() {
     log_info "检查并安装基础软件包..."
@@ -107,7 +181,7 @@ install_basic_packages() {
 }
 
 #############################################
-# 3. 配置时区
+# 4. 配置时区
 #############################################
 configure_timezone() {
     log_info "配置时区为 Asia/Shanghai..."
@@ -128,7 +202,7 @@ configure_timezone() {
 }
 
 #############################################
-# 4. 配置SSH
+# 5. 配置SSH
 #############################################
 configure_ssh() {
     log_info "配置SSH服务..."
@@ -174,7 +248,7 @@ configure_ssh() {
 }
 
 #############################################
-# 5. 配置Samba
+# 6. 配置Samba
 #############################################
 configure_samba() {
     log_info "配置Samba服务..."
@@ -240,7 +314,7 @@ EOF
 }
 
 #############################################
-# 6. 安装配置Zsh和Oh-My-Zsh
+# 7. 安装配置Zsh和Oh-My-Zsh
 #############################################
 install_zsh() {
     log_info "安装配置Zsh和Oh-My-Zsh..."
@@ -348,7 +422,7 @@ EOF
 }
 
 #############################################
-# 7. 配置NFS服务器
+# 8. 配置NFS服务器
 #############################################
 configure_nfs() {
     log_info "配置NFS服务器..."
@@ -400,7 +474,7 @@ configure_nfs() {
 }
 
 #############################################
-# 8. 配置TFTP服务器
+# 9. 配置TFTP服务器
 #############################################
 configure_tftp() {
     log_info "配置TFTP服务器..."
@@ -470,7 +544,7 @@ EOF
 }
 
 #############################################
-# 9. 配置Git
+# 10. 配置Git
 #############################################
 configure_git() {
     log_info "配置Git..."
@@ -517,6 +591,8 @@ main() {
     check_root
 
     # 执行各项配置
+    configure_apt_source || log_error "APT源配置失败，继续执行..."
+
     update_system || log_error "系统更新失败，继续执行..."
 
     install_basic_packages || log_error "基础软件安装失败，继续执行..."
