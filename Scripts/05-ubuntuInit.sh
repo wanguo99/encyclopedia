@@ -4,9 +4,28 @@
 # Ubuntu 开发环境自动部署脚本
 # 基于: 01-Ubuntu-Install-Guide.md
 # 功能: 全自动部署开发环境，支持断点续传
+#
+# 使用方法:
+#   交互模式: sudo ./05-ubuntuInit.sh
+#   自动模式: sudo AUTO_MODE=1 ./05-ubuntuInit.sh
+#
+# 环境变量:
+#   AUTO_MODE=1           # 启用全自动模式，跳过所有交互
+#   SKIP_APT_SOURCE=1     # 跳过APT源配置
+#   ENABLE_ROOT_SSH=1     # 允许root SSH登录
+#   INSTALL_SAMBA=1       # 安装Samba
+#   SAMBA_PASSWORD=xxx    # Samba密码
+#   INSTALL_NFS=1         # 安装NFS
+#   INSTALL_TFTP=1        # 安装TFTP
+#   CONFIG_GIT=1          # 配置Git
+#   GIT_USERNAME=xxx      # Git用户名
+#   GIT_EMAIL=xxx         # Git邮箱
+#   GIT_PROXY=xxx         # Git代理地址
+#   CONFIG_PROXY=1        # 配置系统代理
+#   PROXY_ADDRESS=xxx     # 系统代理地址（格式: http://IP:PORT 或 IP:PORT）
 #############################################
 
-set -e  # 遇到错误立即退出
+set -euo pipefail  # 严格错误处理
 
 # 颜色定义
 RED='\033[0;31m'
@@ -52,18 +71,89 @@ get_real_user() {
 REAL_USER=$(get_real_user)
 REAL_HOME=$(eval echo ~$REAL_USER)
 
+# 状态文件目录
+STATE_DIR="${REAL_HOME}/.ubuntu-init-state"
+STATE_FILE="${STATE_DIR}/completed_steps"
+
 log_info "实际用户: $REAL_USER"
 log_info "用户主目录: $REAL_HOME"
+
+# 创建状态目录
+if [ ! -d "$STATE_DIR" ]; then
+    mkdir -p "$STATE_DIR"
+    chown ${REAL_USER}:${REAL_USER} "$STATE_DIR"
+fi
+
+# 检查步骤是否已完成
+is_step_completed() {
+    local step_name="$1"
+    [ -f "$STATE_FILE" ] && grep -q "^${step_name}$" "$STATE_FILE"
+}
+
+# 标记步骤已完成
+mark_step_completed() {
+    local step_name="$1"
+    if ! is_step_completed "$step_name"; then
+        echo "$step_name" >> "$STATE_FILE"
+        chown ${REAL_USER}:${REAL_USER} "$STATE_FILE"
+        log_success "步骤 [$step_name] 已完成并记录"
+    fi
+}
+
+# 询问用户（支持自动模式）
+ask_user() {
+    local prompt="$1"
+    local default="${2:-n}"
+    local env_var="$3"
+
+    # 如果设置了环境变量，直接返回
+    if [ -n "$env_var" ] && [ "${!env_var:-}" = "1" ]; then
+        echo "y"
+        return 0
+    fi
+
+    # 自动模式使用默认值
+    if [ "${AUTO_MODE:-0}" = "1" ]; then
+        echo "$default"
+        return 0
+    fi
+
+    # 交互模式
+    local answer
+    read -p "$prompt" answer
+    echo "${answer:-$default}"
+}
+
+# 安全执行命令（捕获错误但不退出）
+safe_execute() {
+    local step_name="$1"
+    shift
+
+    if "$@"; then
+        return 0
+    else
+        log_error "步骤 [$step_name] 执行失败，继续执行后续步骤..."
+        return 1
+    fi
+}
 
 #############################################
 # 1. 配置APT镜像源
 #############################################
 configure_apt_source() {
+    local step_name="apt_source"
+
+    if is_step_completed "$step_name"; then
+        log_info "APT镜像源已配置，跳过"
+        return 0
+    fi
+
     log_info "配置APT镜像源..."
 
-    read -p "是否自动选择最快的APT镜像源？(y/n): " change_source
+    local change_source=$(ask_user "是否自动选择最快的APT镜像源？(y/n): " "n" "SKIP_APT_SOURCE")
     if [ "$change_source" != "y" ]; then
         log_info "跳过APT镜像源配置"
+        mark_step_completed "$step_name"
         return 0
     fi
 
@@ -98,6 +188,9 @@ configure_apt_source() {
     # 使用apt-select自动选择最快的镜像源
     log_info "正在测试并选择最快的镜像源（这可能需要几分钟）..."
 
+    # 清理可能存在的旧文件
+    rm -f sources.list
+
     # apt-select会自动测试所有可用镜像源并选择最快的
     # -C 指定国家（CN=中国）
     # -t 指定测试的镜像源数量
@@ -121,6 +214,7 @@ configure_apt_source() {
     log_info "更新软件包列表..."
     if apt update -y; then
         log_success "软件包列表更新成功"
+        mark_step_completed "$step_name"
     else
         log_error "软件包列表更新失败，恢复原配置..."
         cp "${sources_file}.bak" "$sources_file"
@@ -133,10 +227,18 @@ configure_apt_source() {
 # 2. 更新系统软件包
 #############################################
 update_system() {
+    local step_name="system_update"
+
+    if is_step_completed "$step_name"; then
+        log_info "系统软件包已更新，跳过"
+        return 0
+    fi
+
     log_info "开始更新系统软件包..."
 
     if apt update -y && apt upgrade -y; then
         log_success "系统软件包更新完成"
+        mark_step_completed "$step_name"
         return 0
     else
         log_error "系统软件包更新失败"
@@ -148,6 +250,13 @@ update_system() {
 # 3. 安装基础软件
 #############################################
 install_basic_packages() {
+    local step_name="basic_packages"
+
+    if is_step_completed "$step_name"; then
+        log_info "基础软件包已安装，跳过"
+        return 0
+    fi
+
     log_info "检查并安装基础软件包..."
 
     local packages=(
@@ -171,12 +280,14 @@ install_basic_packages() {
         log_info "安装软件包: ${to_install[*]}"
         if apt install -y "${to_install[@]}"; then
             log_success "基础软件包安装完成"
+            mark_step_completed "$step_name"
         else
             log_error "基础软件包安装失败"
             return 1
         fi
     else
         log_success "所有基础软件包已安装"
+        mark_step_completed "$step_name"
     fi
 }
 
@@ -184,17 +295,26 @@ install_basic_packages() {
 # 4. 配置时区
 #############################################
 configure_timezone() {
+    local step_name="timezone"
+
+    if is_step_completed "$step_name"; then
+        log_info "时区已配置，跳过"
+        return 0
+    fi
+
     log_info "配置时区为 Asia/Shanghai..."
 
     local current_tz=$(timedatectl show --property=Timezone --value)
 
     if [ "$current_tz" = "Asia/Shanghai" ]; then
         log_info "时区已设置为 Asia/Shanghai，跳过"
+        mark_step_completed "$step_name"
         return 0
     fi
 
     if timedatectl set-timezone Asia/Shanghai; then
         log_success "时区配置完成"
+        mark_step_completed "$step_name"
     else
         log_error "时区配置失败"
         return 1
@@ -205,6 +325,13 @@ configure_timezone() {
 # 5. 配置SSH
 #############################################
 configure_ssh() {
+    local step_name="ssh"
+
+    if is_step_completed "$step_name"; then
+        log_info "SSH已配置，跳过"
+        return 0
+    fi
+
     log_info "配置SSH服务..."
 
     # 检查是否已安装
@@ -230,7 +357,7 @@ configure_ssh() {
     fi
 
     # 配置root登录（可选，根据安全需求决定）
-    read -p "是否允许root用户SSH登录？(不推荐，输入yes启用): " enable_root_login
+    local enable_root_login=$(ask_user "是否允许root用户SSH登录？(不推荐，输入yes启用): " "no" "ENABLE_ROOT_SSH")
     if [ "$enable_root_login" = "yes" ]; then
         sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
         log_warn "已启用root SSH登录（存在安全风险）"
@@ -241,6 +368,7 @@ configure_ssh() {
     # 重启SSH服务
     if systemctl restart sshd; then
         log_success "SSH服务配置完成并已重启"
+        mark_step_completed "$step_name"
     else
         log_error "SSH服务重启失败"
         return 1
@@ -251,11 +379,19 @@ configure_ssh() {
 # 6. 配置Samba
 #############################################
 configure_samba() {
+    local step_name="samba"
+
+    if is_step_completed "$step_name"; then
+        log_info "Samba已配置，跳过"
+        return 0
+    fi
+
     log_info "配置Samba服务..."
 
-    read -p "是否安装配置Samba？(y/n): " install_samba
+    local install_samba=$(ask_user "是否安装配置Samba？(y/n): " "n" "INSTALL_SAMBA")
     if [ "$install_samba" != "y" ]; then
         log_info "跳过Samba配置"
+        mark_step_completed "$step_name"
         return 0
     fi
 
@@ -300,13 +436,20 @@ EOF
         log_info "Samba用户 ${REAL_USER} 已存在"
     else
         log_info "添加Samba用户 ${REAL_USER}"
-        echo -e "请输入Samba密码:"
-        smbpasswd -a ${REAL_USER}
+
+        # 自动模式下使用环境变量密码
+        if [ "${AUTO_MODE:-0}" = "1" ] && [ -n "${SAMBA_PASSWORD:-}" ]; then
+            echo -e "${SAMBA_PASSWORD}\n${SAMBA_PASSWORD}" | smbpasswd -a -s ${REAL_USER}
+        else
+            echo -e "请输入Samba密码:"
+            smbpasswd -a ${REAL_USER}
+        fi
     fi
 
     # 重启Samba服务
     if systemctl restart smbd; then
         log_success "Samba服务配置完成并已重启"
+        mark_step_completed "$step_name"
     else
         log_error "Samba服务重启失败"
         return 1
@@ -317,6 +460,13 @@ EOF
 # 7. 安装配置Zsh和Oh-My-Zsh
 #############################################
 install_zsh() {
+    local step_name="zsh"
+
+    if is_step_completed "$step_name"; then
+        log_info "Zsh已配置，跳过"
+        return 0
+    fi
+
     log_info "安装配置Zsh和Oh-My-Zsh..."
 
     # 检查zsh是否已安装
@@ -332,9 +482,18 @@ install_zsh() {
         log_info "oh-my-zsh 已安装，跳过"
     else
         log_info "安装 oh-my-zsh..."
-        # 以实际用户身份安装
-        su - ${REAL_USER} -c 'sh -c "$(curl -fsSL https://gitee.com/mirrors/oh-my-zsh/raw/master/tools/install.sh)" "" --unattended'
-        log_success "oh-my-zsh 安装完成"
+        # 以实际用户身份安装，使用gitee镜像
+        if su - ${REAL_USER} -c 'sh -c "$(curl -fsSL https://gitee.com/mirrors/oh-my-zsh/raw/master/tools/install.sh)" "" --unattended'; then
+            log_success "oh-my-zsh 安装完成"
+        else
+            log_error "oh-my-zsh 安装失败，尝试使用GitHub源..."
+            if su - ${REAL_USER} -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended'; then
+                log_success "oh-my-zsh 安装完成"
+            else
+                log_error "oh-my-zsh 安装失败"
+                return 1
+            fi
+        fi
     fi
 
     # 安装插件
@@ -345,7 +504,10 @@ install_zsh() {
         log_info "zsh-syntax-highlighting 已安装"
     else
         log_info "安装 zsh-syntax-highlighting..."
-        su - ${REAL_USER} -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${plugin_dir}/zsh-syntax-highlighting"
+        if ! su - ${REAL_USER} -c "git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git ${plugin_dir}/zsh-syntax-highlighting" 2>/dev/null; then
+            log_warn "zsh-syntax-highlighting 安装失败，跳过"
+            rm -rf "${plugin_dir}/zsh-syntax-highlighting"
+        fi
     fi
 
     # zsh-autosuggestions
@@ -353,7 +515,10 @@ install_zsh() {
         log_info "zsh-autosuggestions 已安装"
     else
         log_info "安装 zsh-autosuggestions..."
-        su - ${REAL_USER} -c "git clone https://github.com/zsh-users/zsh-autosuggestions ${plugin_dir}/zsh-autosuggestions"
+        if ! su - ${REAL_USER} -c "git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions ${plugin_dir}/zsh-autosuggestions" 2>/dev/null; then
+            log_warn "zsh-autosuggestions 安装失败，跳过"
+            rm -rf "${plugin_dir}/zsh-autosuggestions"
+        fi
     fi
 
     # zsh-completions
@@ -361,7 +526,10 @@ install_zsh() {
         log_info "zsh-completions 已安装"
     else
         log_info "安装 zsh-completions..."
-        su - ${REAL_USER} -c "git clone https://github.com/zsh-users/zsh-completions ${plugin_dir}/zsh-completions"
+        if ! su - ${REAL_USER} -c "git clone --depth=1 https://github.com/zsh-users/zsh-completions ${plugin_dir}/zsh-completions" 2>/dev/null; then
+            log_warn "zsh-completions 安装失败，跳过"
+            rm -rf "${plugin_dir}/zsh-completions"
+        fi
     fi
 
     # 配置.zshrc
@@ -409,8 +577,9 @@ EOF
         chown ${REAL_USER}:${REAL_USER} "$zshrc"
     fi
 
-    # 设置zsh为默认shell
-    if [ "$SHELL" = "$(which zsh)" ]; then
+    # 设置zsh为默认shell - 检查实际用户的shell
+    local user_shell=$(getent passwd ${REAL_USER} | cut -d: -f7)
+    if [ "$user_shell" = "$(which zsh)" ]; then
         log_info "zsh 已是默认shell"
     else
         log_info "设置zsh为默认shell..."
@@ -419,17 +588,26 @@ EOF
     fi
 
     log_success "Zsh配置完成"
+    mark_step_completed "$step_name"
 }
 
 #############################################
 # 8. 配置NFS服务器
 #############################################
 configure_nfs() {
+    local step_name="nfs"
+
+    if is_step_completed "$step_name"; then
+        log_info "NFS已配置，跳过"
+        return 0
+    fi
+
     log_info "配置NFS服务器..."
 
-    read -p "是否安装配置NFS服务器？(y/n): " install_nfs
+    local install_nfs=$(ask_user "是否安装配置NFS服务器？(y/n): " "n" "INSTALL_NFS")
     if [ "$install_nfs" != "y" ]; then
         log_info "跳过NFS配置"
+        mark_step_completed "$step_name"
         return 0
     fi
 
@@ -467,6 +645,7 @@ configure_nfs() {
         # 验证导出
         log_info "NFS导出列表:"
         showmount -e
+        mark_step_completed "$step_name"
     else
         log_error "NFS服务重启失败"
         return 1
@@ -477,11 +656,19 @@ configure_nfs() {
 # 9. 配置TFTP服务器
 #############################################
 configure_tftp() {
+    local step_name="tftp"
+
+    if is_step_completed "$step_name"; then
+        log_info "TFTP已配置，跳过"
+        return 0
+    fi
+
     log_info "配置TFTP服务器..."
 
-    read -p "是否安装配置TFTP服务器？(y/n): " install_tftp
+    local install_tftp=$(ask_user "是否安装配置TFTP服务器？(y/n): " "n" "INSTALL_TFTP")
     if [ "$install_tftp" != "y" ]; then
         log_info "跳过TFTP配置"
+        mark_step_completed "$step_name"
         return 0
     fi
 
@@ -533,6 +720,7 @@ EOF
         # 验证服务状态
         if systemctl is-active --quiet tftpd-hpa; then
             log_success "TFTP服务运行正常"
+            mark_step_completed "$step_name"
         else
             log_error "TFTP服务未正常运行"
             return 1
@@ -547,17 +735,30 @@ EOF
 # 10. 配置Git
 #############################################
 configure_git() {
+    local step_name="git"
+
+    if is_step_completed "$step_name"; then
+        log_info "Git已配置，跳过"
+        return 0
+    fi
+
     log_info "配置Git..."
 
-    read -p "是否配置Git用户信息？(y/n): " config_git
+    local config_git=$(ask_user "是否配置Git用户信息？(y/n): " "n" "CONFIG_GIT")
     if [ "$config_git" != "y" ]; then
         log_info "跳过Git配置"
+        mark_step_completed "$step_name"
         return 0
     fi
 
     # 获取用户输入
-    read -p "请输入Git用户名: " git_username
-    read -p "请输入Git邮箱: " git_email
+    local git_username="${GIT_USERNAME:-}"
+    local git_email="${GIT_EMAIL:-}"
+
+    if [ "${AUTO_MODE:-0}" != "1" ] || [ -z "$git_username" ] || [ -z "$git_email" ]; then
+        read -p "请输入Git用户名: " git_username
+        read -p "请输入Git邮箱: " git_email
+    fi
 
     # 配置Git
     su - ${REAL_USER} -c "git config --global user.name '${git_username}'"
@@ -570,13 +771,143 @@ configure_git() {
     log_success "Git配置完成"
 
     # 询问是否配置代理
-    read -p "是否配置Git代理？(y/n): " config_proxy
+    local config_proxy=$(ask_user "是否配置Git代理？(y/n): " "n" "")
     if [ "$config_proxy" = "y" ]; then
-        read -p "请输入代理地址 (例如: 192.168.100.1:7897): " proxy_addr
-        su - ${REAL_USER} -c "git config --global http.proxy ${proxy_addr}"
-        su - ${REAL_USER} -c "git config --global https.proxy ${proxy_addr}"
-        log_success "Git代理配置完成"
+        local proxy_addr="${GIT_PROXY:-}"
+        if [ -z "$proxy_addr" ]; then
+            read -p "请输入代理地址 (例如: 192.168.100.1:7897): " proxy_addr
+        fi
+
+        if [ -n "$proxy_addr" ]; then
+            su - ${REAL_USER} -c "git config --global http.proxy ${proxy_addr}"
+            su - ${REAL_USER} -c "git config --global https.proxy ${proxy_addr}"
+            log_success "Git代理配置完成"
+        fi
     fi
+
+    mark_step_completed "$step_name"
+}
+
+#############################################
+# 11. 配置系统代理（用于后续网络操作）
+#############################################
+configure_system_proxy() {
+    local step_name="system_proxy"
+
+    if is_step_completed "$step_name"; then
+        log_info "系统代理已配置，跳过"
+        return 0
+    fi
+
+    log_info "配置系统代理..."
+
+    local config_proxy=$(ask_user "是否配置系统代理（用于Git/Curl/Wget等）？(y/n): " "n" "CONFIG_PROXY")
+    if [ "$config_proxy" != "y" ]; then
+        log_info "跳过系统代理配置"
+        mark_step_completed "$step_name"
+        return 0
+    fi
+
+    # 获取代理地址
+    local proxy_addr="${PROXY_ADDRESS:-}"
+    if [ -z "$proxy_addr" ]; then
+        read -p "请输入代理地址 (格式: http://IP:PORT 或 IP:PORT): " proxy_addr
+    fi
+
+    # 标准化代理地址格式
+    if [[ ! "$proxy_addr" =~ ^https?:// ]]; then
+        proxy_addr="http://${proxy_addr}"
+    fi
+
+    log_info "使用代理地址: $proxy_addr"
+
+    # 配置环境变量代理（/etc/environment）
+    local env_file="/etc/environment"
+    if [ -f "$env_file" ]; then
+        # 备份
+        if [ ! -f "${env_file}.bak" ]; then
+            cp "$env_file" "${env_file}.bak"
+            log_info "已备份 /etc/environment"
+        fi
+
+        # 删除旧的代理配置
+        sed -i '/^http_proxy=/d' "$env_file"
+        sed -i '/^https_proxy=/d' "$env_file"
+        sed -i '/^HTTP_PROXY=/d' "$env_file"
+        sed -i '/^HTTPS_PROXY=/d' "$env_file"
+        sed -i '/^no_proxy=/d' "$env_file"
+        sed -i '/^NO_PROXY=/d' "$env_file"
+
+        # 添加新的代理配置
+        cat >> "$env_file" <<EOF
+
+# Proxy Configuration
+http_proxy="${proxy_addr}"
+https_proxy="${proxy_addr}"
+HTTP_PROXY="${proxy_addr}"
+HTTPS_PROXY="${proxy_addr}"
+no_proxy="localhost,127.0.0.1,::1"
+NO_PROXY="localhost,127.0.0.1,::1"
+EOF
+        log_success "已配置 /etc/environment 代理"
+    fi
+
+    # 配置APT代理
+    local apt_proxy_file="/etc/apt/apt.conf.d/95proxies"
+    cat > "$apt_proxy_file" <<EOF
+Acquire::http::Proxy "${proxy_addr}";
+Acquire::https::Proxy "${proxy_addr}";
+EOF
+    log_success "已配置APT代理"
+
+    # 配置用户环境变量（.bashrc 和 .zshrc）
+    for rc_file in "${REAL_HOME}/.bashrc" "${REAL_HOME}/.zshrc"; do
+        if [ -f "$rc_file" ]; then
+            # 删除旧的代理配置
+            sed -i '/^export http_proxy=/d' "$rc_file"
+            sed -i '/^export https_proxy=/d' "$rc_file"
+            sed -i '/^export HTTP_PROXY=/d' "$rc_file"
+            sed -i '/^export HTTPS_PROXY=/d' "$rc_file"
+            sed -i '/^export no_proxy=/d' "$rc_file"
+            sed -i '/^export NO_PROXY=/d' "$rc_file"
+
+            # 添加新的代理配置
+            cat >> "$rc_file" <<EOF
+
+# Proxy Configuration
+export http_proxy="${proxy_addr}"
+export https_proxy="${proxy_addr}"
+export HTTP_PROXY="${proxy_addr}"
+export HTTPS_PROXY="${proxy_addr}"
+export no_proxy="localhost,127.0.0.1,::1"
+export NO_PROXY="localhost,127.0.0.1,::1"
+EOF
+            chown ${REAL_USER}:${REAL_USER} "$rc_file"
+            log_success "已配置 $(basename $rc_file) 代理"
+        fi
+    done
+
+    # 立即应用代理到当前会话
+    export http_proxy="${proxy_addr}"
+    export https_proxy="${proxy_addr}"
+    export HTTP_PROXY="${proxy_addr}"
+    export HTTPS_PROXY="${proxy_addr}"
+    export no_proxy="localhost,127.0.0.1,::1"
+    export NO_PROXY="localhost,127.0.0.1,::1"
+
+    log_success "系统代理配置完成"
+    log_info "代理已应用到: Git, APT, Curl, Wget, 环境变量"
+    log_warn "注意: 需要重新登录或执行 'source ~/.bashrc' 使代理生效"
+
+    # 测试代理连接
+    log_info "测试代理连接..."
+    if curl -s --connect-timeout 5 --proxy "$proxy_addr" https://www.google.com > /dev/null 2>&1; then
+        log_success "代理连接测试成功"
+    else
+        log_warn "代理连接测试失败，请检查代理地址是否正确"
+    fi
+
+    mark_step_completed "$step_name"
 }
 
 #############################################
@@ -590,26 +921,35 @@ main() {
     # 检查root权限
     check_root
 
-    # 执行各项配置
-    configure_apt_source || log_error "APT源配置失败，继续执行..."
+    # 显示模式
+    if [ "${AUTO_MODE:-0}" = "1" ]; then
+        log_info "运行模式: 全自动模式"
+    else
+        log_info "运行模式: 交互模式"
+    fi
 
-    update_system || log_error "系统更新失败，继续执行..."
+    # 执行各项配置（使用safe_execute包装，失败不退出）
+    safe_execute "APT源配置" configure_apt_source
 
-    install_basic_packages || log_error "基础软件安装失败，继续执行..."
+    safe_execute "系统更新" update_system
 
-    configure_timezone || log_error "时区配置失败，继续执行..."
+    safe_execute "基础软件安装" install_basic_packages
 
-    configure_ssh || log_error "SSH配置失败，继续执行..."
+    safe_execute "时区配置" configure_timezone
 
-    configure_samba || log_error "Samba配置失败，继续执行..."
+    safe_execute "SSH配置" configure_ssh
 
-    install_zsh || log_error "Zsh安装失败，继续执行..."
+    safe_execute "Samba配置" configure_samba
 
-    configure_nfs || log_error "NFS配置失败，继续执行..."
+    safe_execute "Git配置" configure_git
 
-    configure_tftp || log_error "TFTP配置失败，继续执行..."
+    safe_execute "系统代理配置" configure_system_proxy
 
-    configure_git || log_error "Git配置失败，继续执行..."
+    safe_execute "Zsh安装" install_zsh
+
+    safe_execute "NFS配置" configure_nfs
+
+    safe_execute "TFTP配置" configure_tftp
 
     log_info "=========================================="
     log_success "所有配置任务已完成！"
@@ -618,6 +958,8 @@ main() {
     log_info "1. 请重新登录以使Zsh生效"
     log_info "2. 如需使用Docker，请参考04-Docker-Install-Guide.md"
     log_info "3. 配置备份文件已保存（*.bak）"
+    log_info "4. 状态文件保存在: ${STATE_DIR}"
+    log_info "5. 如需重新执行某个步骤，删除状态文件中对应行即可"
     log_info "=========================================="
 }
 
